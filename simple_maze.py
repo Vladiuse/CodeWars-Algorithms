@@ -1,5 +1,13 @@
 # Simple maze
 # https://www.codewars.com/kata/56bb9b7838dd34d7d8001b3c
+maze = ["########",
+        "# # ####",
+        "# #k#   ",
+        "# # # ##",
+        "# # # ##",
+        "#      #",
+        "########"]
+
 def has_exit(maze):
     global_rez = False
     k_pos = []
@@ -113,4 +121,6 @@ def has_exit(maze):
             break
 
     return global_rez
+
+print(has_exit(maze))
 
