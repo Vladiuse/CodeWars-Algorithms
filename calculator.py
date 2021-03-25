@@ -8,25 +8,23 @@ class Calculator(object):
             while '/' in array or '*' in array:
                 for char in array:
                     if char in operators_1:
-                        oper = char
-                        pos = array.index(oper)
+                        pos = array.index(char)
                         a, b = array[pos - 1], array[pos + 1]
-                        if oper == '/':
+                        if char == '/':
                             array[pos - 1:pos + 2] = [float(a) / float(b)]
                             break
-                        elif oper == '*':
+                        elif char == '*':
                             array[pos - 1:pos + 2] = [float(a) * float(b)]
                             break
             while '+' in array or '-' in array:
                 for char in array:
                     if char in operators_2:
-                        oper = char
-                        pos = array.index(oper)
+                        pos = array.index(char)
                         a, b = array[pos - 1], array[pos + 1]
-                        if oper == '-':
+                        if char == '-':
                             array[pos - 1:pos + 2] = [float(a) - float(b)]
                             break
-                        elif oper == '+':
+                        elif char == '+':
                             array[pos - 1:pos + 2] = [float(a) + float(b)]
                             break
             return str(array[0])
@@ -49,5 +47,4 @@ class Calculator(object):
         while '(' in string:
             string = get_bracket(string)
         string = resolve(string)
-        string = float(string)
-        return string
+        return float(string)
