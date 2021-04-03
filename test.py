@@ -1,30 +1,8 @@
-# info = [["a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"],
-#         ["a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"],
-#         ["a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6"],
-#         ["a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5"],
-#         ["a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4"],
-#         ["a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3"],
-#         ["a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"],
-#         ["a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"]]
-
-board = [[".", ".", ".", ".", ".", ".", ".", "."],
-         ["p", "p", "p", "p", "p", "p", "p", "p"],
-         [".", ".", ".", ".", ".", ".", ".", "."],
-         [".", ".", ".", ".", ".", ".", ".", "."],
-         [".", ".", ".", ".", ".", ".", ".", "."],
-         [".", ".", ".", ".", ".", ".", ".", "."],
-         ["P", "P", "P", "P", "P", "P", "P", "P"],
-         [".", ".", ".", ".", ".", ".", ".", "."]
-
-         ]
-# P in while p is black
-move = ["e4", "d5", "d3", "dxe4"]
-
-
 class IncorrectMove(BaseException):
 
-    def __init__(self, error):
-        self.txt = 'Не коректный ход'
+    def __init__(self, txt, info='no info'):
+        self.info = info
+        self.txt = f'{txt} is invalid'
 
 
 class Board:
@@ -95,9 +73,12 @@ class Player:
         self.figure = figure
 
     def move_type(self, move):
-        if 'dx' in move:
+        if len(move) == 2:
+            return 'move'
+        if len(move) == 4 and move[:2] == 'dx':
             return 'kill'
-        return 'move'
+        else:
+            raise IncorrectMove(txt=move, info=f'некоректный вод {move}')
 
     def decision(self, move):
         if self.move_type(move) == 'move':
@@ -124,9 +105,10 @@ class Player:
                     return self.board._transtorm_to_chess(line, col)
 
             else:
-                raise IncorrectMove(f'на 2 клетки сюда нельзя ходить {move}')
+                raise IncorrectMove(txt=move, info=f'на 2 клетки сюда нельзя ходить {move}')
 
     def beat(self, move):
+        start_move = move
         player_direction = {'white': 1,
                             'black': -1}
         move = move[2:]
@@ -149,11 +131,11 @@ class Player:
                     beat_from = self.board._transtorm_to_chess(line, c)
                     return beat_from
             else:
-                raise IncorrectMove(f'нет фигуры чтобы побить dx{move}')
+                raise IncorrectMove(txt=start_move, info=f'нет фигуры чтобы побить dx{start_move}')
 
 
         else:
-            raise IncorrectMove('нельзя побить пустоту или свою фигуру')
+            raise IncorrectMove(txt=start_move, info='нельзя побить пустоту или свою фигуру')
 
 
 def move_queue(moves):
@@ -164,18 +146,44 @@ def move_queue(moves):
         yield moves[-1], None
 
 
-my_board = Board(board)
-my_board.black_while()
-# print(my_board)
-white_player = Player(color='white', board=my_board, figure='W')
-black_player = Player(color='black', board=my_board, figure='B')
+def pawn_move_tracker(moves):
+    board = [
+        [".", ".", ".", ".", ".", ".", ".", "."],
+        ["p", "p", "p", "p", "p", "p", "p", "p"],
+        [".", ".", ".", ".", ".", ".", ".", "."],
+        [".", ".", ".", ".", ".", ".", ".", "."],
+        [".", ".", ".", ".", ".", ".", ".", "."],
+        [".", ".", ".", ".", ".", ".", ".", "."],
+        ["P", "P", "P", "P", "P", "P", "P", "P"],
+        [".", ".", ".", ".", ".", ".", ".", "."]
+    ]
 
-move_line = ['d4', 'd5', 'e4', 'e5']
-move_line = ['d4', 'd5', 'e4', 'e5', 'dxd5', 'dxd4', 'a4', 'c6', 'dxc6', 'dxc6', 'dxc6']
-for move in move_queue(move_line):
-    white_move = move[0]
-    black_move = move[1]
-    white_player.decision(white_move)
-    if black_move:
-        black_player.decision(black_move)
-    print(my_board)
+    my_board = Board(board)
+    white_player = Player(color='white', board=my_board, figure='P')
+    black_player = Player(color='black', board=my_board, figure='p')
+
+    move_line = moves
+    # move_line = ['d4', 'd5', 'e4', 'e5', 'dxd5', 'dxd4', 'a4', 'c6', 'dxc6', 'dxc6', 'dxc6']
+    try:
+        for move in move_queue(move_line):
+            white_move = move[0]
+            black_move = move[1]
+            white_player.decision(white_move)
+            if black_move:
+                black_player.decision(black_move)
+        return my_board.board
+    except IncorrectMove as exc:
+        return exc.txt
+
+
+print(pawn_move_tracker(["dxe3", "d6", "e4", "a6"]))
+
+mov_1 = ['a4', 'a5', 'b4', 'b5', 'c4', 'b4']
+# should equal 'b4 is invalid'
+mov_2 = ['h3', 'h5', 'h4', 'g5', 'hxg5', 'h4']
+rez = [['.', '.', '.', '.', '.', '.', '.', '.'], ['p', 'p', 'p', 'p', 'p', 'p', '.', '.'],
+       ['.', '.', '.', '.', '.', '.', '.', '.'], ['.', '.', '.', '.', '.', '.', 'P', '.'],
+       ['.', '.', '.', '.', '.', '.', '.', 'p'], ['.', '.', '.', '.', '.', '.', '.', '.'],
+       ['P', 'P', 'P', 'P', 'P', 'P', 'P', '.'], ['.', '.', '.', '.', '.', '.', '.', '.']]
+
+mov_3 = ['a3', 'h6', 'a4', 'h5', 'a5', 'h4', 'a6', 'h3', 'axb7', 'hxg2']
