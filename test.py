@@ -95,6 +95,8 @@ class Player:
                          'black': '5'}
         line, col = self.board._transtorm(move)
         line = line + player_direction[self.color]
+        if self.board.get_square(line, col) != '.':
+            raise IncorrectMove(txt=move, info=f'Нельзя пойти где занято {move}')
         if self.board.get_square(line, col) == self.figure:  # проверка на один назад
             return self.board._transtorm_to_chess(line, col)
         else:
@@ -171,12 +173,12 @@ def pawn_move_tracker(moves):
             white_player.decision(white_move)
             if black_move:
                 black_player.decision(black_move)
-        return my_board.board
+        return my_board
     except IncorrectMove as exc:
         return exc.txt
 
 
-print(pawn_move_tracker(["dxe3", "d6", "e4", "a6"]))
+print(pawn_move_tracker(['a4', 'a5', 'b4', 'b5', 'c4', 'b4']))
 
 mov_1 = ['a4', 'a5', 'b4', 'b5', 'c4', 'b4']
 # should equal 'b4 is invalid'
