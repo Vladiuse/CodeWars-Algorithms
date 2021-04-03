@@ -1,3 +1,5 @@
+# https://www.codewars.com/kata/56b012bbee8829c4ea00002c
+
 class IncorrectMove(BaseException):
 
     def __init__(self, txt, info='no info'):
@@ -75,7 +77,7 @@ class Player:
     def move_type(self, move):
         if len(move) == 2:
             return 'move'
-        if len(move) == 4 and move[:2] == 'dx':
+        if len(move) == 4:
             return 'kill'
         else:
             raise IncorrectMove(txt=move, info=f'некоректный вод {move}')
@@ -94,20 +96,19 @@ class Player:
         p_double_move = {'white': '4',
                          'black': '5'}
         line, col = self.board._transtorm(move)
-        line = line + player_direction[self.color]
         if self.board.get_square(line, col) != '.':
             raise IncorrectMove(txt=move, info=f'Нельзя пойти где занято {move}')
-        if self.board.get_square(line, col) == self.figure:  # проверка на один назад
+        line = line + player_direction[self.color]
+        # проверка на один назад
+        if self.board.get_square(line, col) == self.figure:
             return self.board._transtorm_to_chess(line, col)
-        else:
-            # пробуей пойти на 2 клетки
-            if p_double_move[self.color] == move[1]:
+        # пробуем пойти на 2 клетки
+        elif p_double_move[self.color] == move[1]:
                 line = line + player_direction[self.color]
                 if self.board.get_square(line, col) == self.figure:
                     return self.board._transtorm_to_chess(line, col)
-
-            else:
-                raise IncorrectMove(txt=move, info=f'на 2 клетки сюда нельзя ходить {move}')
+        else:
+            raise IncorrectMove(txt=move, info=f'на 2 клетки сюда нельзя ходить {move}')
 
     def beat(self, move):
         start_move = move
@@ -127,15 +128,13 @@ class Player:
                         pass
                     else:
                         cols[id] = None
-            if any(cols):
+            if cols.count(None) != 2:
                 cols.remove(None)
                 for c in cols:  # расчитываем что фигура чтобы побить только одна
                     beat_from = self.board._transtorm_to_chess(line, c)
                     return beat_from
             else:
                 raise IncorrectMove(txt=start_move, info=f'нет фигуры чтобы побить dx{start_move}')
-
-
         else:
             raise IncorrectMove(txt=start_move, info='нельзя побить пустоту или свою фигуру')
 
@@ -164,12 +163,8 @@ def pawn_move_tracker(moves):
     white_player = Player(color='white', board=my_board, figure='P')
     black_player = Player(color='black', board=my_board, figure='p')
 
-    move_line = moves
-    # move_line = ['d4', 'd5', 'e4', 'e5', 'dxd5', 'dxd4', 'a4', 'c6', 'dxc6', 'dxc6', 'dxc6']
     try:
-        for move in move_queue(move_line):
-            white_move = move[0]
-            black_move = move[1]
+        for white_move, black_move in move_queue(moves):
             white_player.decision(white_move)
             if black_move:
                 black_player.decision(black_move)
@@ -178,14 +173,4 @@ def pawn_move_tracker(moves):
         return exc.txt
 
 
-print(pawn_move_tracker(['a4', 'a5', 'b4', 'b5', 'c4', 'b4']))
-
-mov_1 = ['a4', 'a5', 'b4', 'b5', 'c4', 'b4']
-# should equal 'b4 is invalid'
-mov_2 = ['h3', 'h5', 'h4', 'g5', 'hxg5', 'h4']
-rez = [['.', '.', '.', '.', '.', '.', '.', '.'], ['p', 'p', 'p', 'p', 'p', 'p', '.', '.'],
-       ['.', '.', '.', '.', '.', '.', '.', '.'], ['.', '.', '.', '.', '.', '.', 'P', '.'],
-       ['.', '.', '.', '.', '.', '.', '.', 'p'], ['.', '.', '.', '.', '.', '.', '.', '.'],
-       ['P', 'P', 'P', 'P', 'P', 'P', 'P', '.'], ['.', '.', '.', '.', '.', '.', '.', '.']]
-
-mov_3 = ['a3', 'h6', 'a4', 'h5', 'a5', 'h4', 'a6', 'h3', 'axb7', 'hxg2']
+print(pawn_move_tracker(['a3', 'h6', 'a4', 'h5', 'a5', 'h4', 'a6', 'h3', 'axb7', 'hxg2']))
