@@ -21,6 +21,12 @@ board = [[".", ".", ".", ".", ".", ".", ".", "."],
 move = ["e4", "d5", "d3", "dxe4"]
 
 
+class IncorrectMove(BaseException):
+
+    def __init__(self, error):
+        self.txt = 'Не коректный ход'
+
+
 class Board:
 
     def __init__(self, board):
@@ -97,14 +103,57 @@ class Player:
         if self.move_type(move) == 'move':
             move_from = self.coor_from_move(move)
             self.board.move(move_from, move)
+        else:
+            beat_from = self.beat(move)
+            self.board.move(beat_from, move[2:])
 
     def coor_from_move(self, move):
         player_direction = {'white': 1,
                             'black': -1}
+        p_double_move = {'white': '4',
+                         'black': '5'}
         line, col = self.board._transtorm(move)
         line = line + player_direction[self.color]
-        if self.board.get_square(line, col) == self.figure:
+        if self.board.get_square(line, col) == self.figure:  # проверка на один назад
             return self.board._transtorm_to_chess(line, col)
+        else:
+            # пробуей пойти на 2 клетки
+            if p_double_move[self.color] == move[1]:
+                line = line + player_direction[self.color]
+                if self.board.get_square(line, col) == self.figure:
+                    return self.board._transtorm_to_chess(line, col)
+
+            else:
+                raise IncorrectMove(f'на 2 клетки сюда нельзя ходить {move}')
+
+    def beat(self, move):
+        player_direction = {'white': 1,
+                            'black': -1}
+        move = move[2:]
+        line, col = self.board._transtorm(move)
+        to_beat = self.board.get_square(line, col)
+        if to_beat != '.' and to_beat != self.figure:
+            line = line + player_direction[self.color]
+            cols = [col - 1, col + 1]
+            for id, c in enumerate(cols):
+                if c < 0 or c > 7:
+                    cols[id] = None
+                else:
+                    if self.board.get_square(line, c) == self.figure:  # если есть наша фигура чтобы побить
+                        pass
+                    else:
+                        cols[id] = None
+            if any(cols):
+                cols.remove(None)
+                for c in cols:  # расчитываем что фигура чтобы побить только одна
+                    beat_from = self.board._transtorm_to_chess(line, c)
+                    return beat_from
+            else:
+                raise IncorrectMove(f'нет фигуры чтобы побить dx{move}')
+
+
+        else:
+            raise IncorrectMove('нельзя побить пустоту или свою фигуру')
 
 
 def move_queue(moves):
@@ -116,14 +165,17 @@ def move_queue(moves):
 
 
 my_board = Board(board)
-print(my_board)
-white_player = Player(color='white', board=my_board, figure='P')
-black_player = Player(color='black', board=my_board, figure='p')
+my_board.black_while()
+# print(my_board)
+white_player = Player(color='white', board=my_board, figure='W')
+black_player = Player(color='black', board=my_board, figure='B')
 
-move_line = ['a3', 'a6', 'b3', 'b6', 'c3', 'c6', 'f3', 'f6', ]
+move_line = ['d4', 'd5', 'e4', 'e5']
+move_line = ['d4', 'd5', 'e4', 'e5', 'dxd5', 'dxd4', 'a4', 'c6', 'dxc6', 'dxc6', 'dxc6']
 for move in move_queue(move_line):
     white_move = move[0]
     black_move = move[1]
     white_player.decision(white_move)
-    black_player.decision(black_move)
+    if black_move:
+        black_player.decision(black_move)
     print(my_board)
