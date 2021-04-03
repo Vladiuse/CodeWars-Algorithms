@@ -127,7 +127,7 @@ class Player:
                     cols[id] = None
             if cols.count(None) != 2:
                 cols.remove(None)
-                for c in cols:  # расчитываем что фигура чтобы побить только одна
+                for c in cols:
                     beat_from = self.board._transtorm_to_chess(line, c)
                     return beat_from
             else:
