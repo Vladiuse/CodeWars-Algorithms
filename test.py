@@ -39,6 +39,7 @@ class Board:
         return rez + alpha
 
     def black_while(self):
+        # it not because i'm racist!
         dic = {'P': 'W',
                'p': 'B'}
         for line_id, line in enumerate(self.board):
@@ -48,12 +49,12 @@ class Board:
                     self.board[line_id][s_id] = new
 
     def move(self, one, two):
-        one_line, one_col = self.transtorm(one)
-        two_line, two_col = self.transtorm(two)
+        one_line, one_col = self._transtorm(one)
+        two_line, two_col = self._transtorm(two)
         self.board[two_line][two_col] = self.board[one_line][one_col]
         self.board[one_line][one_col] = '.'
 
-    def transtorm(self, coors):
+    def _transtorm(self, coors):
         position = {'a': 0, 'b': 1, 'c': 2, 'd': 3,
                     'e': 4, 'f': 5, 'g': 6, 'h': 7,
                     }
@@ -62,12 +63,67 @@ class Board:
         line = 8 - int(line)
         return line, col
 
+    def _transtorm_to_chess(self, line, col):
+        position = {0: 'a', 1: 'b', 2: 'c', 3: 'd',
+                    4: 'e', 5: 'f', 6: 'g', 7: 'h',
+                    }
+        col = position[col]
+        line = 8 - int(line)
+        return str(col) + str(line)
 
-starts_board = Board(board)
+    def _is_figure(self, coors):
+        line, col = self._transtorm(coors)
+        return self.board[line][col] != '.'
 
-starts_board.black_while()
-print(starts_board)
-starts_board.move('a2', 'a4')
-print(starts_board)
-starts_board.move('h7', 'e1')
-print(starts_board)
+    def get_square(self, line, col):
+        return self.board[line][col]
+
+
+class Player:
+    chess = {'white': 'P',
+             'black': 'p'}
+
+    def __init__(self, color, board, figure):
+        self.color = color
+        self.board = board
+        self.figure = figure
+
+    def move_type(self, move):
+        if 'dx' in move:
+            return 'kill'
+        return 'move'
+
+    def decision(self, move):
+        if self.move_type(move) == 'move':
+            move_from = self.coor_from_move(move)
+            self.board.move(move_from, move)
+
+    def coor_from_move(self, move):
+        player_direction = {'white': 1,
+                            'black': -1}
+        line, col = self.board._transtorm(move)
+        line = line + player_direction[self.color]
+        if self.board.get_square(line, col) == self.figure:
+            return self.board._transtorm_to_chess(line, col)
+
+
+def move_queue(moves):
+    try:
+        for i in range(0, len(moves), 2):
+            yield moves[i], moves[i + 1]
+    except IndexError:
+        yield moves[-1], None
+
+
+my_board = Board(board)
+print(my_board)
+white_player = Player(color='white', board=my_board, figure='P')
+black_player = Player(color='black', board=my_board, figure='p')
+
+move_line = ['a3', 'a6', 'b3', 'b6', 'c3', 'c6', 'f3', 'f6', ]
+for move in move_queue(move_line):
+    white_move = move[0]
+    black_move = move[1]
+    white_player.decision(white_move)
+    black_player.decision(black_move)
+    print(my_board)
