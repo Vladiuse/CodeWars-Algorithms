@@ -69,6 +69,12 @@ class Player:
     chess = {'white': 'P',
              'black': 'p'}
 
+    player_direction = {'white': 1,
+                        'black': -1}
+
+    p_double_move = {'white': '4',
+                     'black': '5'}
+
     def __init__(self, color, board, figure):
         self.color = color
         self.board = board
@@ -91,20 +97,16 @@ class Player:
             self.board.move(beat_from, move[2:])
 
     def coor_from_move(self, move):
-        player_direction = {'white': 1,
-                            'black': -1}
-        p_double_move = {'white': '4',
-                         'black': '5'}
         line, col = self.board._transtorm(move)
         if self.board.get_square(line, col) != '.':
             raise IncorrectMove(txt=move, info=f'Нельзя пойти где занято {move}')
-        line = line + player_direction[self.color]
+        line = line + Player.player_direction[self.color]
         # проверка на один назад
         if self.board.get_square(line, col) == self.figure:
             return self.board._transtorm_to_chess(line, col)
         # пробуем пойти на 2 клетки
-        elif p_double_move[self.color] == move[1]:
-                line = line + player_direction[self.color]
+        elif Player.p_double_move[self.color] == move[1]:
+                line = line + Player.player_direction[self.color]
                 if self.board.get_square(line, col) == self.figure:
                     return self.board._transtorm_to_chess(line, col)
         else:
@@ -112,22 +114,17 @@ class Player:
 
     def beat(self, move):
         start_move = move
-        player_direction = {'white': 1,
-                            'black': -1}
         move = move[2:]
         line, col = self.board._transtorm(move)
         to_beat = self.board.get_square(line, col)
         if to_beat != '.' and to_beat != self.figure:
-            line = line + player_direction[self.color]
+            line = line + Player.player_direction[self.color]
             cols = [col - 1, col + 1]
             for id, c in enumerate(cols):
                 if c < 0 or c > 7:
                     cols[id] = None
-                else:
-                    if self.board.get_square(line, c) == self.figure:  # если есть наша фигура чтобы побить
-                        pass
-                    else:
-                        cols[id] = None
+                elif self.board.get_square(line, c) != self.figure:  # если есть наша фигура чтобы побить
+                    cols[id] = None
             if cols.count(None) != 2:
                 cols.remove(None)
                 for c in cols:  # расчитываем что фигура чтобы побить только одна
